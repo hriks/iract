@@ -44,7 +44,7 @@ function removeRange(parent, start, end) {
     let n = start;
     while (n) {
         const next = n.nextSibling;
-        if (n.parentNode === parent) if (n.parentNode === parent) { try { parent.removeChild(n); } catch (e) {} }
+        if (n.parentNode === parent) { try { parent.removeChild(n); } catch (e) {} }
         if (n === end) break;
         n = next;
     }
@@ -578,9 +578,18 @@ function updateDomProperties(dom, prevProps = {}, nextProps = {}) {
         name !== "dangerouslySetInnerHTML";
     const inSvg = dom.namespaceURI === SVG_NS;
 
-    Object.keys(prevProps).forEach(name => {
-        if (isEvent(name) && (!nextProps[name] || prevProps[name] !== nextProps[name])) {
-            dom.removeEventListener(name.toLowerCase().substring(2), prevProps[name]);
+    // Handle event listeners - consolidate add/remove logic
+    const allEventNames = new Set([
+        ...Object.keys(prevProps).filter(isEvent),
+        ...Object.keys(nextProps).filter(isEvent)
+    ]);
+    allEventNames.forEach(name => {
+        const eventName = name.toLowerCase().substring(2);
+        const oldHandler = prevProps[name];
+        const newHandler = nextProps[name];
+        if (oldHandler !== newHandler) {
+            if (oldHandler) dom.removeEventListener(eventName, oldHandler);
+            if (newHandler) dom.addEventListener(eventName, newHandler);
         }
     });
 
@@ -601,13 +610,8 @@ function updateDomProperties(dom, prevProps = {}, nextProps = {}) {
 
     Object.keys(nextProps).forEach(name => {
         if (name === "children") return;
+        if (isEvent(name)) return; // Already handled above
         const value = nextProps[name];
-        if (isEvent(name)) {
-            if (!prevProps[name] || prevProps[name] !== value) {
-                dom.addEventListener(name.toLowerCase().substring(2), value);
-            }
-            return;
-        }
         if (name === "dangerouslySetInnerHTML") {
             const prev = prevProps?.dangerouslySetInnerHTML?.__html;
             const next = value && typeof value === "object" ? value.__html ?? "" : "";
@@ -756,18 +760,23 @@ function memo(component, areEqual = (a, b) => JSON.stringify(a) === JSON.stringi
 
 function forwardRef(renderFn) {
     return function Forwarded(props) {
-        const ref = props.ref || { current: null };
-        return renderFn(props, ref);
+        return renderFn(props, props.ref || null);
     };
 }
 
 function lazy(loader) {
     let Loaded = null;
+    let loadError = null;
+    let loadPromise = null;
     return function Lazy(props) {
-        if (!Loaded) {
-            throw loader().then(m => (Loaded = m.default));
+        if (loadError) throw loadError;
+        if (Loaded) return Loaded(props);
+        if (!loadPromise) {
+            loadPromise = loader()
+                .then(m => { Loaded = m.default; })
+                .catch(e => { loadError = e; });
         }
-        return Loaded(props);
+        throw loadPromise;
     };
 }
 

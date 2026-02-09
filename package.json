@@ -27,11 +27,15 @@
   "sideEffects": false,
   "scripts": {
     "build": "rollup -c",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "prepublishOnly": "npm run build"
   },
   "devDependencies": {
     "@rollup/plugin-terser": "^0.4.4",
-    "rollup": "^4.9.0"
+    "jsdom": "^24.0.0",
+    "rollup": "^4.9.0",
+    "vitest": "^1.2.0"
   },
   "keywords": [
     "react",
