@@ -600,6 +600,7 @@ function updateDomProperties(dom, prevProps = {}, nextProps = {}) {
     });
 
     Object.keys(nextProps).forEach(name => {
+        if (name === "children") return;
         const value = nextProps[name];
         if (isEvent(name)) {
             if (!prevProps[name] || prevProps[name] !== value) {

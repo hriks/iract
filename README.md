@@ -10,6 +10,40 @@ npm install iract
 
 ## Usage
 
+### With Vite (Recommended)
+
+The easiest way to use iRact with JSX:
+
+```js
+// vite.config.js
+import { defineConfig } from 'vite';
+import iract from 'iract/vite';
+
+export default defineConfig({
+  plugins: [iract()]
+});
+```
+
+Then JSX just works - no additional configuration needed:
+
+```jsx
+// App.jsx
+import { useState, render } from 'iract';
+
+function App() {
+  const [count, setCount] = useState(0);
+
+  return (
+    <div>
+      <h1>Count: {count}</h1>
+      <button onClick={() => setCount(c => c + 1)}>Increment</button>
+    </div>
+  );
+}
+
+render(App, null, '#root');
+```
+
 ### ES Modules
 
 ```js

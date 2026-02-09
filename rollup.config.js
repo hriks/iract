@@ -34,5 +34,26 @@ export default [
       exports: 'named'
     },
     plugins: [terser()]
+  },
+  // Vite plugin - ESM
+  {
+    input: 'src/vite/index.js',
+    output: {
+      file: 'dist/vite.js',
+      format: 'esm',
+      sourcemap: true
+    },
+    external: ['vite']
+  },
+  // Vite plugin - CJS
+  {
+    input: 'src/vite/index.js',
+    output: {
+      file: 'dist/vite.cjs',
+      format: 'cjs',
+      sourcemap: true,
+      exports: 'named'
+    },
+    external: ['vite']
   }
 ];

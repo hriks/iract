@@ -1,6 +1,6 @@
 {
   "name": "iract",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "A lightweight React-like framework with hooks, context, and virtual DOM",
   "author": "hriks",
   "license": "MIT",
@@ -14,6 +14,11 @@
       "import": "./dist/iract.esm.js",
       "require": "./dist/iract.cjs",
       "types": "./dist/iract.d.ts"
+    },
+    "./vite": {
+      "import": "./dist/vite.js",
+      "require": "./dist/vite.cjs",
+      "types": "./dist/vite.d.ts"
     }
   },
   "files": [
@@ -35,7 +40,9 @@
     "frontend",
     "ui",
     "framework",
-    "lightweight"
+    "lightweight",
+    "vite",
+    "jsx"
   ],
   "repository": {
     "type": "git",
