@@ -1,0 +1,48 @@
+{
+  "name": "iract",
+  "version": "1.0.0",
+  "description": "A lightweight React-like framework with hooks, context, and virtual DOM",
+  "author": "hriks",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/iract.cjs",
+  "module": "./dist/iract.esm.js",
+  "browser": "./dist/iract.umd.js",
+  "types": "./dist/iract.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/iract.esm.js",
+      "require": "./dist/iract.cjs",
+      "types": "./dist/iract.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "rollup -c",
+    "prepublishOnly": "npm run build"
+  },
+  "devDependencies": {
+    "@rollup/plugin-terser": "^0.4.4",
+    "rollup": "^4.9.0"
+  },
+  "keywords": [
+    "react",
+    "virtual-dom",
+    "hooks",
+    "frontend",
+    "ui",
+    "framework",
+    "lightweight"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hriks/iract.git"
+  },
+  "bugs": {
+    "url": "https://github.com/hriks/iract/issues"
+  },
+  "homepage": "https://github.com/hriks/iract#readme"
+}
