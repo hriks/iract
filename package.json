@@ -1,6 +1,6 @@
 {
   "name": "iract",
-  "version": "0.0.2",
+  "version": "0.0.4",
   "description": "A lightweight React-like framework with hooks, context, and virtual DOM",
   "author": "hriks",
   "license": "MIT",
@@ -31,10 +31,19 @@
     "test:watch": "vitest",
     "prepublishOnly": "npm run build"
   },
+  "peerDependencies": {
+    "vite": ">=4.0.0"
+  },
+  "peerDependenciesMeta": {
+    "vite": {
+      "optional": true
+    }
+  },
   "devDependencies": {
     "@rollup/plugin-terser": "^0.4.4",
     "jsdom": "^24.0.0",
     "rollup": "^4.9.0",
+    "vite": "^5.0.0",
     "vitest": "^1.2.0"
   },
   "keywords": [
