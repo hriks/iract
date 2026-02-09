@@ -114,13 +114,27 @@ render(App, null, '#root');
 
 ### Rendering
 
-#### `render(component, props, container)`
+#### `render(component, props, container, options?)`
 
 Renders a component into a DOM container.
 
 ```js
 render(App, { title: 'My App' }, document.getElementById('root'));
 render(App, null, '#root'); // selector string also works
+```
+
+**With Shadow DOM** (for CSS isolation):
+
+```js
+// With styles
+import styles from './styles.css?inline';
+render(App, null, '#root', { useShadow: true, styles });
+
+// Without styles
+render(App, null, '#root', { useShadow: true });
+
+// Shorthand
+render(App, null, '#root', true);
 ```
 
 #### `unmount(container)`
@@ -293,11 +307,41 @@ Check if an object is a valid iRact element.
 isValidElement(element); // true or false
 ```
 
+## Shadow DOM
+
+iRact supports rendering components inside Shadow DOM for complete CSS isolation. This is useful when embedding components in third-party pages or when you need styles that won't leak in or out.
+
+```js
+import { render, useState } from 'iract';
+import styles from './widget.css?inline';  // Vite's ?inline imports as string
+
+function Widget() {
+  const [count, setCount] = useState(0);
+  return (
+    <div>
+      <h1>Count: {count}</h1>
+      <button onclick={() => setCount(count + 1)}>Increment</button>
+    </div>
+  );
+}
+
+// Render with Shadow DOM and scoped styles
+render(Widget, null, '#widget-root', { useShadow: true, styles });
+```
+
+**Note:** When using Shadow DOM, global CSS (via `import './styles.css'`) won't apply inside the shadow root. Use the `?inline` suffix to import CSS as a string and pass it via the `styles` option.
+
+| Approach | Global CSS works? | CSS isolated? |
+|----------|------------------|---------------|
+| `render(C, null, '#app')` | Yes | No |
+| `render(C, null, '#app', { useShadow: true, styles })` | No | Yes |
+
 ## Features
 
 - Virtual DOM with efficient reconciliation
 - Hooks API (useState, useEffect, useReducer, useRef, useMemo, useCallback, useContext)
 - Context API for state management
+- Shadow DOM support for CSS isolation
 - Fragments for grouping elements
 - SVG support
 - Refs (callback and object refs)

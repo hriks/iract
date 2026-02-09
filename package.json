@@ -1,6 +1,6 @@
 {
   "name": "iract",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "A lightweight React-like framework with hooks, context, and virtual DOM",
   "author": "hriks",
   "license": "MIT",
@@ -55,7 +55,10 @@
     "framework",
     "lightweight",
     "vite",
-    "jsx"
+    "jsx",
+    "shadow-dom",
+    "css-isolation",
+    "web-components"
   ],
   "repository": {
     "type": "git",
