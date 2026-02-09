@@ -1,3 +1,5 @@
+import { transformWithEsbuild } from 'vite';
+
 /**
  * Vite plugin for iRact
  * Enables JSX support without manual configuration
@@ -26,8 +28,25 @@ export default function iract(options = {}) {
           jsxFactory: 'iRact.h',
           jsxFragment: 'iRact.Fragment',
           jsxInject: jsxInject ? `import iRact from 'iract'` : undefined
+        },
+        optimizeDeps: {
+          esbuildOptions: {
+            loader: {
+              '.js': 'jsx'
+            }
+          }
         }
       };
+    },
+
+    async transform(code, id) {
+      if (!id.match(/src\/.*\.js$/)) return null;
+
+      return transformWithEsbuild(code, id, {
+        loader: 'jsx',
+        jsxFactory: 'iRact.h',
+        jsxFragment: 'iRact.Fragment'
+      });
     }
   };
 }

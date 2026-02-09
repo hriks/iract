@@ -114,22 +114,71 @@ function createContext(defaultValue) {
 }
 
 // ---------- Public rendering ----------
-function render(component, props, container) {
+function render(component, props, container, options = {}) {
     if (typeof container === "string") container = document.querySelector(container);
     if (!container) throw new Error("iRact.render: container not found");
 
+    // Handle options - can be boolean (useShadow) or object
+    const opts = typeof options === "boolean" ? { useShadow: options } : options;
+    const { useShadow = false, styles = null } = opts;
+
+    // Determine render target (shadow root or container)
+    let renderTarget = container;
+    let shadowRoot = null;
+
+    if (useShadow) {
+        // Create or reuse shadow root
+        if (!container._iractShadowRoot) {
+            shadowRoot = container.attachShadow({ mode: 'open' });
+            container._iractShadowRoot = shadowRoot;
+        } else {
+            shadowRoot = container._iractShadowRoot;
+        }
+        renderTarget = shadowRoot;
+
+        // Inject styles if provided
+        if (styles && !shadowRoot._iractStylesInjected) {
+            const styleEl = document.createElement('style');
+            styleEl.textContent = Array.isArray(styles) ? styles.join('\n') : styles;
+            shadowRoot.appendChild(styleEl);
+            shadowRoot._iractStylesInjected = true;
+        }
+    }
+
     const element = createElement(component, props);
 
-    if (!container._iractRoot) container.innerHTML = "";
+    if (!container._iractRoot) {
+        if (useShadow) {
+            // Clear shadow root content except styles
+            const styleEl = shadowRoot.querySelector('style');
+            shadowRoot.innerHTML = '';
+            if (styleEl) shadowRoot.appendChild(styleEl);
+        } else {
+            container.innerHTML = "";
+        }
+    }
 
-    currentContainer = container;
-    const instance = reconcile(container, container._iractRoot?.instance || null, element);
+    currentContainer = renderTarget;
+
+    // Store back-reference from shadow root to container for rerender
+    if (shadowRoot) {
+        shadowRoot._iractHostContainer = container;
+    }
+
+    const instance = reconcile(renderTarget, container._iractRoot?.instance || null, element);
 
     container._iractRoot = {
         container,
+        renderTarget,
+        shadowRoot,
         instance,
         unmount: () => {
-            container.innerHTML = "";
+            if (shadowRoot) {
+                shadowRoot.innerHTML = "";
+                delete container._iractShadowRoot;
+            } else {
+                container.innerHTML = "";
+            }
             delete container._iractRoot;
         }
     };
@@ -657,12 +706,16 @@ function updateDomProperties(dom, prevProps = {}, nextProps = {}) {
 
 // ---------- Hooks ----------
 function rerender(container) {
-    if (!container?._iractRoot) return;
-    const { instance } = container._iractRoot;
+    // Handle case where container is actually a shadow root (from useState in shadow DOM)
+    const actualContainer = container?._iractHostContainer || container;
+    if (!actualContainer?._iractRoot) return;
+    const { instance, renderTarget } = actualContainer._iractRoot;
     const element = instance.element;
-    currentContainer = container;
-    const updated = reconcile(container, instance, element);
-    container._iractRoot.instance = updated;
+    // Use renderTarget (shadow root) if available, otherwise container
+    const target = renderTarget || actualContainer;
+    currentContainer = target;
+    const updated = reconcile(target, instance, element);
+    actualContainer._iractRoot.instance = updated;
 }
 
 function useState(initial) {
@@ -802,12 +855,15 @@ const iRact = {
     memo, forwardRef, lazy, Suspense, StrictMode, Profiler,
     render, renderLegacy, unmount,
     cloneElement, isValidElement,
-    version: "1.0.0"
+    version: "0.0.5"
 };
 
 export default iRact;
+const h = createElement;
+
 export {
     createElement,
+    h,
     cloneElement,
     isValidElement,
     createContext,
