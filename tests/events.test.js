@@ -95,4 +95,35 @@ describe('Event handling', () => {
     expect(clickHandler).toHaveBeenCalledTimes(1);
     expect(mouseEnterHandler).toHaveBeenCalledTimes(1);
   });
+
+  it('handles onClick in Shadow DOM', () => {
+    const handler = vi.fn();
+    function App() {
+      return createElement('button', { onClick: handler }, 'Click me');
+    }
+    render(App, null, container, { useShadow: true });
+    const shadowRoot = container.shadowRoot;
+    const button = shadowRoot.querySelector('button');
+    button.click();
+    expect(handler).toHaveBeenCalledTimes(1);
+  });
+
+  it('handles state updates with events in Shadow DOM', async () => {
+    function App() {
+      const [count, setCount] = useState(0);
+      return createElement('div', null,
+        createElement('span', { id: 'count' }, String(count)),
+        createElement('button', { onClick: () => setCount(c => c + 1) }, 'Increment')
+      );
+    }
+    render(App, null, container, { useShadow: true });
+    const shadowRoot = container.shadowRoot;
+
+    expect(shadowRoot.querySelector('#count').textContent).toBe('0');
+
+    shadowRoot.querySelector('button').click();
+    await new Promise(r => setTimeout(r, 10));
+
+    expect(shadowRoot.querySelector('#count').textContent).toBe('1');
+  });
 });

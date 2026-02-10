@@ -592,7 +592,7 @@ function setDomAttribute(dom, name, value) {
 }
 
 function diffStyle(dom, prev, next) {
-    if (next && typeof next === "string") {
+    if (typeof next === "string") {
         dom.style.cssText = next;
         return;
     }
