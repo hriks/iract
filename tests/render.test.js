@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import iRact, { render, unmount, createElement } from '../src/iract.js';
+import iRact, { render, unmount, createElement, useState } from '../src/iract.js';
 
 describe('render', () => {
   let container;
@@ -105,5 +105,27 @@ describe('render', () => {
 
     render(App, { show: false }, container);
     expect(container.querySelector('span')).toBeNull();
+  });
+
+  it('clears style when transitioning to empty string', async () => {
+    function App() {
+      const [hidden, setHidden] = useState(true);
+      return createElement('div', null,
+        createElement('div', {
+          id: 'target',
+          style: hidden ? 'display:none' : ''
+        }, 'Content'),
+        createElement('button', { id: 'toggle', onClick: () => setHidden(false) }, 'Show')
+      );
+    }
+    render(App, null, container);
+
+    const target = container.querySelector('#target');
+    expect(target.style.display).toBe('none');
+
+    container.querySelector('#toggle').click();
+    await new Promise(r => setTimeout(r, 10));
+
+    expect(target.style.display).toBe('');
   });
 });
