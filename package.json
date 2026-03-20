@@ -1,6 +1,6 @@
 {
   "name": "iract",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "A lightweight React-like framework with hooks, context, and virtual DOM",
   "author": "hriks",
   "license": "MIT",

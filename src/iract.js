@@ -10,6 +10,7 @@
 // --- Internal Symbols ---
 const IRACT_ELEMENT = Symbol.for("iract.element");
 const IRACT_FRAGMENT = Symbol.for("iract.fragment");
+const IRACT_PORTAL = Symbol.for("iract.portal");
 
 // --- Namespaces for SVG ---
 const SVG_NS = "http://www.w3.org/2000/svg";
@@ -98,6 +99,17 @@ function cloneElement(element, props, ...children) {
 
 function isValidElement(object) {
     return typeof object === "object" && object !== null && object.$typeof === IRACT_ELEMENT;
+}
+
+function createPortal(children, container) {
+    if (!container || typeof container.appendChild !== "function") {
+        throw new Error("iRact.createPortal: container must be a DOM element");
+    }
+    return {
+        $typeof: IRACT_ELEMENT,
+        type: IRACT_PORTAL,
+        props: { children: Array.isArray(children) ? children : [children], container }
+    };
 }
 
 // ---------- Context ----------
@@ -219,6 +231,19 @@ function unmountInstance(instance) {
 function removeInstance(parent, instance) {
     if (!instance) return;
     unmountInstance(instance); // run cleanups
+    if (instance._portalContainer) {
+        // Portal: remove children from the portal container
+        const pc = instance._portalContainer;
+        (instance.childInstances || []).forEach(ci => {
+            if (ci && ci.dom && ci.dom.parentNode === pc) pc.removeChild(ci.dom);
+            if (ci && ci._range) removeRange(pc, ci._range.start, ci._range.end);
+        });
+        // Remove placeholder comment from parent
+        if (instance.dom && instance.dom.parentNode === parent) {
+            parent.removeChild(instance.dom);
+        }
+        return;
+    }
     if (instance._range) {
         removeRange(parent, instance._range.start, instance._range.end);
     } else if (instance.dom && instance.dom.parentNode === parent) {
@@ -424,6 +449,34 @@ function reconcile(parentDom, instance, element) {
         return instance;
     }
 
+    if (element.type === IRACT_PORTAL) {
+        const oldContainer = instance._portalContainer;
+        const newContainer = element.props.container;
+        const nextEls = normalizeChildren(element.props.children);
+        const oldChildren = instance.childInstances || [];
+
+        if (oldContainer === newContainer) {
+            // Same container — reconcile children in place
+            instance.childInstances = reconcileList(newContainer, oldChildren, nextEls, null);
+        } else {
+            // Container changed — remove from old, re-instantiate in new
+            oldChildren.forEach(ci => removeInstance(oldContainer, ci));
+            const newChildren = nextEls.map(el => instantiate(el, "html")).filter(Boolean);
+            newChildren.forEach(ci => {
+                if (ci._mountNodes && ci._range) {
+                    mountRange(newContainer, ci._range.start, ci._range.end, ci._mountNodes);
+                    delete ci._mountNodes;
+                } else if (ci.dom) {
+                    newContainer.appendChild(ci.dom);
+                }
+            });
+            instance.childInstances = newChildren;
+            instance._portalContainer = newContainer;
+        }
+        instance.element = element;
+        return instance;
+    }
+
     console.error("iRact.reconcile: invalid element", element);
     return null;
 }
@@ -506,6 +559,23 @@ function instantiate(element, ns = "html") {
             }
         });
         return { element, childInstances, _range: range, _mountNodes: mountNodes };
+    }
+
+    if (element.type === IRACT_PORTAL) {
+        const portalContainer = element.props.container;
+        const children = normalizeChildren(element.props.children);
+        const childInstances = children.map(el => instantiate(el, "html")).filter(Boolean);
+        childInstances.forEach(ci => {
+            if (ci._mountNodes && ci._range) {
+                mountRange(portalContainer, ci._range.start, ci._range.end, ci._mountNodes);
+                delete ci._mountNodes;
+            } else if (ci.dom) {
+                portalContainer.appendChild(ci.dom);
+            }
+        });
+        // Placeholder comment in the parent DOM for position tracking
+        const placeholder = document.createComment("iract:portal");
+        return { dom: placeholder, element, childInstances, _portalContainer: portalContainer };
     }
 
     if (typeof element.type === "function") {
@@ -854,8 +924,8 @@ const iRact = {
     useState, useEffect, useMemo, useCallback, useContext, createContext, useReducer, useRef,
     memo, forwardRef, lazy, Suspense, StrictMode, Profiler,
     render, renderLegacy, unmount,
-    cloneElement, isValidElement,
-    version: "0.0.5"
+    cloneElement, isValidElement, createPortal,
+    version: "0.0.7"
 };
 
 export default iRact;
@@ -866,6 +936,7 @@ export {
     h,
     cloneElement,
     isValidElement,
+    createPortal,
     createContext,
     render,
     renderLegacy,
