@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import iRact, { render, createElement, createPortal, useState, useEffect, useContext, createContext } from '../src/iract.js';
+import iRact, { render, unmount, createElement, createPortal, useState, useEffect, useContext, createContext } from '../src/iract.js';
 
 const h = createElement;
 const Fragment = iRact.Fragment;
@@ -183,6 +183,38 @@ describe('createPortal', () => {
         expect(() => createPortal(h('div', null), null)).toThrow('container must be a DOM element');
         expect(() => createPortal(h('div', null), 'not-a-dom')).toThrow('container must be a DOM element');
         expect(() => createPortal(h('div', null), {})).toThrow('container must be a DOM element');
+    });
+
+    it('cleans up portal children from target on unmount', () => {
+        function App() {
+            return h('div', null,
+                createPortal(h('p', null, 'portal content'), portalTarget)
+            );
+        }
+        render(App, null, container);
+        expect(portalTarget.querySelector('p').textContent).toBe('portal content');
+
+        unmount(container);
+        expect(portalTarget.querySelector('p')).toBeNull();
+    });
+
+    it('cleans up fragment-returning component in portal on unmount', () => {
+        function FragList() {
+            return h(Fragment, null,
+                h('span', null, 'x'),
+                h('span', null, 'y')
+            );
+        }
+        function App() {
+            return h('div', null,
+                createPortal(h(FragList, null), portalTarget)
+            );
+        }
+        render(App, null, container);
+        expect(portalTarget.querySelectorAll('span').length).toBe(2);
+
+        unmount(container);
+        expect(portalTarget.querySelectorAll('span').length).toBe(0);
     });
 
     it('renders multiple children in portal', () => {

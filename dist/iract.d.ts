@@ -52,6 +52,8 @@ export function cloneElement<P>(
 
 export function isValidElement(object: any): object is IRactElement;
 
+export { createElement as h };
+
 // Portals
 export function createPortal(children: IRactNode, container: Element): IRactElement;
 

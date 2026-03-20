@@ -185,6 +185,7 @@ function render(component, props, container, options = {}) {
         shadowRoot,
         instance,
         unmount: () => {
+            unmountInstance(container._iractRoot?.instance);
             if (shadowRoot) {
                 shadowRoot.innerHTML = "";
                 delete container._iractShadowRoot;
@@ -219,6 +220,18 @@ function unmountInstance(instance) {
     if (instance.childInstances) instance.childInstances.forEach(unmountInstance);
     if (instance.childInstance) unmountInstance(instance.childInstance);
 
+    // Portal: remove children from the portal container on unmount
+    if (instance._portalContainer) {
+        const pc = instance._portalContainer;
+        (instance.childInstances || []).forEach(ci => {
+            if (ci && ci._range) {
+                removeRange(pc, ci._range.start, ci._range.end);
+            } else if (ci && ci.dom && ci.dom.parentNode === pc) {
+                pc.removeChild(ci.dom);
+            }
+        });
+    }
+
     if (instance.hooks) {
         for (const h of instance.hooks) {
             if (h && typeof h.cleanup === "function") {
@@ -232,13 +245,8 @@ function removeInstance(parent, instance) {
     if (!instance) return;
     unmountInstance(instance); // run cleanups
     if (instance._portalContainer) {
-        // Portal: remove children from the portal container
-        const pc = instance._portalContainer;
-        (instance.childInstances || []).forEach(ci => {
-            if (ci && ci.dom && ci.dom.parentNode === pc) pc.removeChild(ci.dom);
-            if (ci && ci._range) removeRange(pc, ci._range.start, ci._range.end);
-        });
-        // Remove placeholder comment from parent
+        // Portal children already cleaned from container by unmountInstance above.
+        // Just remove the placeholder comment from the parent.
         if (instance.dom && instance.dom.parentNode === parent) {
             parent.removeChild(instance.dom);
         }
@@ -925,7 +933,7 @@ const iRact = {
     memo, forwardRef, lazy, Suspense, StrictMode, Profiler,
     render, renderLegacy, unmount,
     cloneElement, isValidElement, createPortal,
-    version: "0.0.8"
+    version: "0.0.9"
 };
 
 export default iRact;
