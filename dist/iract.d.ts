@@ -52,6 +52,9 @@ export function cloneElement<P>(
 
 export function isValidElement(object: any): object is IRactElement;
 
+// Portals
+export function createPortal(children: IRactNode, container: Element): IRactElement;
+
 // Context
 export function createContext<T>(defaultValue: T): Context<T>;
 
@@ -143,6 +146,7 @@ declare const iRact: {
     unmount: typeof unmount;
     cloneElement: typeof cloneElement;
     isValidElement: typeof isValidElement;
+    createPortal: typeof createPortal;
     version: string;
 };
 

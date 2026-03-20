@@ -360,7 +360,7 @@ instantiate(element) // → shadowRoot
 | Fiber Architecture | Yes | No (simpler recursion) |
 | DevTools | Yes | No |
 | Error Boundaries | Yes | No |
-| Portals | Yes | No (use Shadow DOM) |
+| Portals | Yes | Yes |
 | Strict Mode | Yes | Basic |
 
 ### When to Use iRact
