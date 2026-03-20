@@ -307,6 +307,38 @@ Check if an object is a valid iRact element.
 isValidElement(element); // true or false
 ```
 
+#### `createPortal(children, container)`
+
+Render children into a different DOM node. Useful for modals, tooltips, and dropdowns that need to escape overflow or z-index contexts.
+
+```js
+import { createPortal, useState, render } from 'iract';
+
+function Modal({ onClose }) {
+  return createPortal(
+    <div className="modal-overlay">
+      <div className="modal">
+        <p>Modal content</p>
+        <button onClick={onClose}>Close</button>
+      </div>
+    </div>,
+    document.getElementById('modal-root')
+  );
+}
+
+function App() {
+  const [show, setShow] = useState(false);
+  return (
+    <div>
+      <button onClick={() => setShow(true)}>Open Modal</button>
+      {show && <Modal onClose={() => setShow(false)} />}
+    </div>
+  );
+}
+
+render(App, null, '#root');
+```
+
 ## Shadow DOM
 
 iRact supports rendering components inside Shadow DOM for complete CSS isolation. This is useful when embedding components in third-party pages or when you need styles that won't leak in or out.
@@ -342,6 +374,7 @@ render(Widget, null, '#widget-root', { useShadow: true, styles });
 - Hooks API (useState, useEffect, useReducer, useRef, useMemo, useCallback, useContext)
 - Context API for state management
 - Shadow DOM support for CSS isolation
+- Portals for rendering into external DOM nodes
 - Fragments for grouping elements
 - SVG support
 - Refs (callback and object refs)
